@@ -10,7 +10,8 @@ using System.Threading.Tasks;
 
 namespace Archi.Library.Controllers
 {
-    [Route("api/[controller]")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
     public class BaseController<TContext, TModel> : ControllerBase where TContext: BaseDbContext where TModel : BaseModel
     {
@@ -52,11 +53,7 @@ namespace Archi.Library.Controllers
                 return BadRequest();
             }
 
-            if (!ModelExists(id))
-            {
-                return NotFound();
-            }
-
+            
             _context.Entry(model).State = EntityState.Modified;
 
             try
@@ -65,7 +62,15 @@ namespace Archi.Library.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                    throw;
+
+                if (!ModelExists(id))
+                {
+                    return NotFound();
+                }
+                else { 
+
+                throw;
+            }
                 
             }
 
@@ -106,7 +111,7 @@ namespace Archi.Library.Controllers
 
         private bool ModelExists(int id)
         {
-            return _context.Set<TModel>().Any(e => e.ID == id);
+            return _context.Set<TModel>().Any(e => e.ID == id && e.Active);
         }
     }
 
