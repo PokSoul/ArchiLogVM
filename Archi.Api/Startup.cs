@@ -42,6 +42,7 @@ namespace Archi.Api
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "My api", Version = "v1" });
+                //add-swagger
             });
         }
 
