@@ -1,4 +1,5 @@
 ﻿using Archi.Library.Data;
+using Archi.Library.Extensions;
 using Archi.Library.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -23,9 +24,16 @@ namespace Archi.Library.Controllers
 
         // GET: api/[controller]
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<TModel>>> GetAll()
+        public async Task<ActionResult<IEnumerable<TModel>>> GetAll([FromQuery] Params param)
         {
-            return await _context.Set<TModel>().Where(x => x.Active == true).ToListAsync();
+            var result2 = _context.Set<TModel>().Where(x => x.Active == true);
+
+            //QueryExtensions.Sort(result2, param);
+            var resultOrd = result2.Sort(param);
+
+            return await resultOrd.ToListAsync();
+
+
         }
 
         // GET: api/[controller]/[id]
