@@ -9,9 +9,14 @@ namespace Archi.Library.Models
         public string Asc { get; set; }
         public string Desc { get; set; }
         public string Range { get; set; }
-        public bool HasOrder()
+        public bool HasAscOrder()
         {
-            return !string.IsNullOrWhiteSpace(Asc) || !string.IsNullOrWhiteSpace(Desc);
+            return !string.IsNullOrWhiteSpace(Asc);
+        }
+
+        public bool HasDescOrder()
+        {
+           return !string.IsNullOrWhiteSpace(Desc);
         }
         public bool HasRange()
         {
