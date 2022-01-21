@@ -9,5 +9,6 @@ namespace Archi.Library.Models
         public int ID { get; set; }
         public bool Active { get; set; }
         public DateTime? DeletedAt { get; set; }
+        public DateTime? CreatedAt { get; set; }
     }
 }
