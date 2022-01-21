@@ -9,10 +9,11 @@ namespace Archi.Library.Models
         public string Asc { get; set; }
         public string Desc { get; set; }
         public string Range { get; set; }
-        public string Search { get; set; }
+        public string SearchKey { get; set; }
+        public string SearchValue { get; set; }
 
         public bool HasSearch() {
-            return !string.IsNullOrEmpty(Search);
+            return !string.IsNullOrEmpty(SearchKey) && !string.IsNullOrEmpty(SearchValue);
         }
         public bool HasAscOrder()
         {
