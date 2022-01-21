@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 namespace Archi.Library.Controllers
 {
     [ApiVersion("1.0")]
+    [ApiVersion("2.0")]
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
     public class BaseController<TContext, TModel> : ControllerBase where TContext: BaseDbContext where TModel : BaseModel
@@ -40,12 +41,14 @@ namespace Archi.Library.Controllers
         [HttpGet("search")]
         public async Task<ActionResult<IEnumerable<TModel>>> GetSearch([FromQuery] Params param)
         {
-            var result2 = _context.Set<TModel>().Where(x => x.Active == false);
+            var result2 = _context.Set<TModel>().Where(x => x.Active == true);
 
-            //QueryExtensions.Sort(result2, param);
-            var resultOrd = result2.Sort(param);
+          
 
-            return await resultOrd.ToListAsync();
+            //var search = result2.Contains<TModel>();
+
+           
+            return await result2.ToListAsync();
 
 
         }

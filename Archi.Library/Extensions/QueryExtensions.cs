@@ -51,6 +51,31 @@ namespace Archi.Library.Extensions
                 return (IOrderedQueryable<TModel>)query;
         }
 
+        public static IOrderedQueryable<TModel> Where<TModel>(this IQueryable<TModel> query, Params param)
+        {
+            var parameter = Expression.Parameter(typeof(TModel), "x");
+            if (param.HasSearch())
+            {
+                string champ = param.Search;
+                //string champ2 = param.Desc;
+                Console.WriteLine();
+                //var property = typeof(TModel).GetProperty(champ, System.Reflection.BindingFlags.IgnoreCase | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
+                // return query.OrderBy(x => typeof(TModel).GetProperty(champ, System.Reflection.BindingFlags.IgnoreCase | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public));
+
+                //créer lambda
+
+                var property = Expression.Property(parameter, champ);
+                var o = Expression.Convert(property, typeof(object));
+                var lambda = Expression.Lambda<Func<TModel, object>>(o, parameter);
+
+                //utilise
+                 return query.Where();
+
+            }
+            else
+                return (IOrderedQueryable<TModel>)query;
+        }
+
 
     }
 }
