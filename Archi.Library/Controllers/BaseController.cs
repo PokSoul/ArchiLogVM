@@ -36,6 +36,20 @@ namespace Archi.Library.Controllers
 
         }
 
+        // GET: api/[controller]/search
+        [HttpGet("search")]
+        public async Task<ActionResult<IEnumerable<TModel>>> GetSearch([FromQuery] Params param)
+        {
+            var result2 = _context.Set<TModel>().Where(x => x.Active == false);
+
+            //QueryExtensions.Sort(result2, param);
+            var resultOrd = result2.Sort(param);
+
+            return await resultOrd.ToListAsync();
+
+
+        }
+
         // GET: api/[controller]/[id]
         [HttpGet("{id}")]
         public async Task<ActionResult<TModel>> GetById(int id)
