@@ -45,7 +45,7 @@ namespace Archi.Library.Controllers
 
           
 
-           // var search = result2.Contains<TModel>(param);
+           var search = result2.ApplySearch<TModel>(param);
 
            
             return await result2.ToListAsync();

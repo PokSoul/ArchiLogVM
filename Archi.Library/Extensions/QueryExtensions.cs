@@ -14,14 +14,14 @@ namespace Archi.Library.Extensions
             var parameter = Expression.Parameter(typeof(TModel), "x");
             if (param.HasAscOrder())
             {
-                string champ = param.Asc; 
+                string champ = param.Asc;
                 //string champ2 = param.Desc;
-                Console.WriteLine( );
+                Console.WriteLine();
                 //var property = typeof(TModel).GetProperty(champ, System.Reflection.BindingFlags.IgnoreCase | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
                 // return query.OrderBy(x => typeof(TModel).GetProperty(champ, System.Reflection.BindingFlags.IgnoreCase | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public));
 
                 //créer lambda
-                
+
                 var property = Expression.Property(parameter, champ);
                 var o = Expression.Convert(property, typeof(object));
                 var lambda = Expression.Lambda<Func<TModel, object>>(o, parameter);
@@ -30,7 +30,7 @@ namespace Archi.Library.Extensions
                 return query.OrderBy(lambda);
 
             }
-            else if(param.HasDescOrder())
+            else if (param.HasDescOrder())
             {
                 string champ = param.Desc;
                 //string champ2 = param.Desc;
@@ -50,32 +50,48 @@ namespace Archi.Library.Extensions
             else
                 return (IOrderedQueryable<TModel>)query;
         }
+        public static IQueryable<T> ApplySearch<T>(this IQueryable<T> query, Params param)
+        {
+            string search = param.Search;
+            if (query == null) throw new ArgumentNullException(nameof(query));
+            if (string.IsNullOrWhiteSpace(search)) return query;
 
-        //public static IOrderedQueryable<TModel> Where<TModel>(this IQueryable<TModel> query, Params param)
-        //{
-        //    var parameter = Expression.Parameter(typeof(TModel), "x");
-        //    if (param.HasSearch())
-        //    {
-        //        string champ = param.;
-        //        //string champ2 = param.Desc;
-        //        Console.WriteLine();
-        //        //var property = typeof(TModel).GetProperty(champ, System.Reflection.BindingFlags.IgnoreCase | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
-        //        // return query.OrderBy(x => typeof(TModel).GetProperty(champ, System.Reflection.BindingFlags.IgnoreCase | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public));
+            var parameter = Expression.Parameter(typeof(T), "e");
+            // The following simulates closure to let EF Core create parameter rather than constant value (in case you use `Expresssion.Constant(search)`)
+            var value = Expression.Property(Expression.Constant(new { search }), nameof(search));
+            var body = SearchStrings(parameter, value);
+            if (body == null) return query;
 
-        //        //créer lambda
+            var predicate = Expression.Lambda<Func<T, bool>>(body, parameter);
+            return query.Where(predicate);
+        }
 
-        //        var property = Expression.Property(parameter, champ);
-        //        var o = Expression.Convert(property, typeof(object));
-        //        var lambda = Expression.Lambda<Func<TModel, object>>(o, parameter);
+        static Expression SearchStrings(Expression target, Expression search)
+        {
+            Expression result = null;
 
-        //        //utilise
-        //         return query.Where<TModel>(lambda);
+            var properties = target.Type
+              .GetProperties()
+              .Where(x => x.CanRead);
 
-        //    }
-        //    else
-        //        return (IOrderedQueryable<TModel>)query;
-        //}
+            foreach (var prop in properties)
+            {
+                Expression condition = null;
+                var propValue = Expression.MakeMemberAccess(target, prop);
+                if (prop.PropertyType == typeof(string))
+                {
+                    var comparand = Expression.Call(propValue, nameof(string.ToLower), Type.EmptyTypes);
+                    condition = Expression.Call(comparand, nameof(string.Contains), Type.EmptyTypes, search);
+                }
+                else if (!prop.PropertyType.Namespace.StartsWith("System."))
+                {
+                    condition = SearchStrings(propValue, search);
+                }
+                if (condition != null)
+                    result = result == null ? condition : Expression.OrElse(result, condition);
+            }
 
-
+            return result;
+        }
     }
 }
