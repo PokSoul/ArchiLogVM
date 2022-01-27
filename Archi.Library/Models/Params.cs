@@ -2,13 +2,16 @@
 using System.Collections.Generic;
 using System.Text;
 
+
 namespace Archi.Library.Models
 {
     public class Params
     {
         public string Asc { get; set; }
         public string Desc { get; set; }
+        public string Fields { get; set; }
         public string Range { get; set; }
+
         public bool HasAscOrder()
         {
             return !string.IsNullOrWhiteSpace(Asc);
