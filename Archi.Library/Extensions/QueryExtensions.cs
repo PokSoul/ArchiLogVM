@@ -14,6 +14,7 @@ namespace Archi.Library.Extensions
         public static IOrderedQueryable<TModel> Sort<TModel>(this IQueryable<TModel> query, Params param)
         {
             var parameter = Expression.Parameter(typeof(TModel), "x");
+            
             if (param.HasAscOrder())
             {
                 string champ = param.Asc;
@@ -43,6 +44,20 @@ namespace Archi.Library.Extensions
                 //utilise
                 return query.OrderByDescending(lambda);
             }
+            else if(param.HasRange())
+            {
+                string Range = param.Range;
+                string[] RangeSplit = Range.Split('-');
+                int RangeValue = int.Parse(RangeSplit[1]) - int.Parse(RangeSplit[0]) + 1;
+                int SkipValue = int.Parse(RangeSplit[0]);
+                int MaxRange = query.Count();
+
+                return (IOrderedQueryable<TModel>)query.Skip(SkipValue).Take(RangeValue);
+            }
+            
+
+
+
             else
                 return (IOrderedQueryable<TModel>)query;
         }
