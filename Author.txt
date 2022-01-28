@@ -1,0 +1,16 @@
+Membres du groupes :
+Melvin DEBOT
+Vincent MEECHAI
+
+Tâches effectuées:
+Création database Vincent Melvin
+Versionning Vincent Melvin
+Pagination Melvin
+Tri Vincent Melvin
+Filtre
+Recherche Vincent
+Reponse partielles
+Log Vincent
+Test unitaire Vincent
+Swagger UI Melvin
+Authentification
