@@ -50,12 +50,9 @@ namespace Archi.Library.Extensions
                 string[] RangeSplit = Range.Split('-');
                 int RangeValue = int.Parse(RangeSplit[1]) - int.Parse(RangeSplit[0]) + 1;
                 int SkipValue = int.Parse(RangeSplit[0]);
-                int MaxRange = query.Count();
 
                 return (IOrderedQueryable<TModel>)query.Skip(SkipValue).Take(RangeValue);
             }
-            
-
 
 
             else
@@ -78,69 +75,33 @@ namespace Archi.Library.Extensions
 
             var result = query;
             var parameter = Expression.Parameter(typeof(TModel), "x");
-            var res = champ.Select(e => LikeExpression<TModel>(parameter, e.Key, e.Value ));
             BinaryExpression bin = null;
-            foreach (var data in res) {
+            foreach (var data in search) {
 
-                //var value = data.Value;
-         
-                //var property = Expression.Property(parameter,data.Key);
-                //Expression constant;
-                //constant = Expression.Constant(data);
-           
+                var propertyInfo = typeof(TModel).GetProperty(data.Key, System.Reflection.BindingFlags.IgnoreCase | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
 
-                //var expComp = Expression.Equal(property,constant);
-                //if (bin == null) 
-                //{
-                //    bin = expComp;
-                //}
-                //else
-                //{
-                //    bin = Expression.And(bin, expComp);
-                //}
-                var lambda = Expression.Lambda<Func<TModel, bool>>(bin, parameter);
-                result = result.Where(lambda);
+
+                var property = Expression.Property(parameter, propertyInfo);
+                Expression constant;
+                Expression convert = Expression.Convert(property, propertyInfo.PropertyType);
+                constant = Expression.Constant(Convert.ChangeType(data.Value, typeof(string)));
+                
+
+                var expComp = Expression.Equal(convert, constant);
+                if (bin == null)
+                {
+                    bin = expComp;
+                }
+                else
+                {
+                    bin = Expression.And(bin, expComp);
+                }
+              
 
             }
-
-
+            var lambda = Expression.Lambda<Func<TModel, bool>>(bin, parameter);
+            result = result.Where(lambda);
             return result;
-        }
-
-        public static Expression LikeExpression<TModel>(ParameterExpression param, string key, string value)
-        {
-
-            var propertyInfo = typeof(TModel).GetProperty(key, System.Reflection.BindingFlags.IgnoreCase | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-            var member = Expression.Property(param, propertyInfo);
-
-            //var startwith = value.StartsWith("*");
-            //var endswith = value.StartsWith("*");
-            //var searchvalue = value.Replace("*", "");
-
-            Expression constant;
-            Expression convert;
-            Expression exp;
-
-            constant = Expression.Constant(value);
-            convert = Expression.Convert(member, typeof(string));
-
-
-            //    if (endsWith && startWith)
-            //    {
-            //        exp = Expression.Call(convert, "Contains", null, constant);
-            //    }
-            //    else if (startWith)
-            //    {
-            //        exp = Expression.Call(convert, "EndsWith", null, constant);
-            //    }
-            //    else if (endsWith)
-            //        exp = Expression.Call(convert, "StartsWith", null, constant);
-            //    else
-            //    {
-                    exp = Expression.Equal(convert, constant);
-            //    }
-            return exp;
-
         }
     }
 }
