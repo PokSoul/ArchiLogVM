@@ -1,4 +1,6 @@
 ﻿using Archi.Library.Models;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Primitives;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,11 +17,8 @@ namespace Archi.Library.Extensions
             if (param.HasAscOrder())
             {
                 string champ = param.Asc;
-                //string champ2 = param.Desc;
                 Console.WriteLine();
-                //var property = typeof(TModel).GetProperty(champ, System.Reflection.BindingFlags.IgnoreCase | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
-                // return query.OrderBy(x => typeof(TModel).GetProperty(champ, System.Reflection.BindingFlags.IgnoreCase | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public));
-
+   
                 //créer lambda
 
                 var property = Expression.Property(parameter, champ);
@@ -33,11 +32,8 @@ namespace Archi.Library.Extensions
             else if (param.HasDescOrder())
             {
                 string champ = param.Desc;
-                //string champ2 = param.Desc;
                 Console.WriteLine();
-                //var property = typeof(TModel).GetProperty(champ, System.Reflection.BindingFlags.IgnoreCase | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
-                // return query.OrderBy(x => typeof(TModel).GetProperty(champ, System.Reflection.BindingFlags.IgnoreCase | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public));
-
+  
                 //créer lambda
 
                 var property = Expression.Property(parameter, champ);
@@ -50,48 +46,86 @@ namespace Archi.Library.Extensions
             else
                 return (IOrderedQueryable<TModel>)query;
         }
-        public static IQueryable<T> ApplySearch<T>(this IQueryable<T> query, Params param)
+        public static IQueryable<TModel> ApplySearch<TModel>(this IQueryable<TModel> query, Params param, IQueryCollection search)
         {
-            string search = param.Search;
-            if (query == null) throw new ArgumentNullException(nameof(query));
-            if (string.IsNullOrWhiteSpace(search)) return query;
-
-            var parameter = Expression.Parameter(typeof(T), "e");
-            // The following simulates closure to let EF Core create parameter rather than constant value (in case you use `Expresssion.Constant(search)`)
-            var value = Expression.Property(Expression.Constant(new { search }), nameof(search));
-            var body = SearchStrings(parameter, value);
-            if (body == null) return query;
-
-            var predicate = Expression.Lambda<Func<T, bool>>(body, parameter);
-            return query.Where(predicate);
-        }
-
-        static Expression SearchStrings(Expression target, Expression search)
-        {
-            Expression result = null;
-
-            var properties = target.Type
-              .GetProperties()
-              .Where(x => x.CanRead);
-
-            foreach (var prop in properties)
+            var champ = new Dictionary<string, StringValues>();
+        
+            foreach (KeyValuePair<string, StringValues> item in search)
             {
-                Expression condition = null;
-                var propValue = Expression.MakeMemberAccess(target, prop);
-                if (prop.PropertyType == typeof(string))
+                var property = typeof(Params).GetProperty(item.Key, System.Reflection.BindingFlags.IgnoreCase | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
+
+                if (property != null)
                 {
-                    var comparand = Expression.Call(propValue, nameof(string.ToLower), Type.EmptyTypes);
-                    condition = Expression.Call(comparand, nameof(string.Contains), Type.EmptyTypes, search);
+                    champ.Add(item.Key, item.Value);
                 }
-                else if (!prop.PropertyType.Namespace.StartsWith("System."))
-                {
-                    condition = SearchStrings(propValue, search);
-                }
-                if (condition != null)
-                    result = result == null ? condition : Expression.OrElse(result, condition);
+            
             }
 
+            var result = query;
+            var parameter = Expression.Parameter(typeof(TModel), "x");
+            var res = champ.Select(e => LikeExpression<TModel>(parameter, e.Key, e.Value ));
+            BinaryExpression bin = null;
+            foreach (var data in res) {
+
+                //var value = data.Value;
+         
+                //var property = Expression.Property(parameter,data.Key);
+                //Expression constant;
+                //constant = Expression.Constant(data);
+           
+
+                //var expComp = Expression.Equal(property,constant);
+                //if (bin == null) 
+                //{
+                //    bin = expComp;
+                //}
+                //else
+                //{
+                //    bin = Expression.And(bin, expComp);
+                //}
+                var lambda = Expression.Lambda<Func<TModel, bool>>(bin, parameter);
+                result = result.Where(lambda);
+
+            }
+
+
             return result;
+        }
+
+        public static Expression LikeExpression<TModel>(ParameterExpression param, string key, string value)
+        {
+
+            var propertyInfo = typeof(TModel).GetProperty(key, System.Reflection.BindingFlags.IgnoreCase | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+            var member = Expression.Property(param, propertyInfo);
+
+            //var startwith = value.StartsWith("*");
+            //var endswith = value.StartsWith("*");
+            //var searchvalue = value.Replace("*", "");
+
+            Expression constant;
+            Expression convert;
+            Expression exp;
+
+            constant = Expression.Constant(value);
+            convert = Expression.Convert(member, typeof(string));
+
+
+            //    if (endsWith && startWith)
+            //    {
+            //        exp = Expression.Call(convert, "Contains", null, constant);
+            //    }
+            //    else if (startWith)
+            //    {
+            //        exp = Expression.Call(convert, "EndsWith", null, constant);
+            //    }
+            //    else if (endsWith)
+            //        exp = Expression.Call(convert, "StartsWith", null, constant);
+            //    else
+            //    {
+                    exp = Expression.Equal(convert, constant);
+            //    }
+            return exp;
+
         }
     }
 }

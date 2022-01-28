@@ -43,11 +43,8 @@ namespace Archi.Library.Controllers
         {
             var result2 = _context.Set<TModel>().Where(x => x.Active == true);
 
-          
+           var search = result2.ApplySearch<TModel>(param, this.Request.Query);
 
-           var search = result2.ApplySearch<TModel>(param);
-
-           
             return await result2.ToListAsync();
 
 

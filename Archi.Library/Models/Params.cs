@@ -9,8 +9,9 @@ namespace Archi.Library.Models
         public string Asc { get; set; }
         public string Desc { get; set; }
         public string Range { get; set; }
-        public string Search { get; set; }
- 
+        public string Key { get; set; }
+        public string Value { get; set; }
+
         public bool HasAscOrder()
         {
             return !string.IsNullOrWhiteSpace(Asc);
